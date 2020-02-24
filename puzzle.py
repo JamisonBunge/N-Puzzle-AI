@@ -6,6 +6,9 @@ import sys
 import math
 import time
 import queue as Q
+import resource
+
+#TODO: fix resource amoutn
 
 
 #### SKELETON CODE ####
@@ -38,6 +41,33 @@ class PuzzleState(object):
         # Get the index and (row, col) of empty block
         self.blank_index = self.config.index(0)
 
+
+    def move_helper(self, cant_move_at, offset, action):
+
+        old_config = list(self.config)
+        index_of_blank = old_config.index(0)
+
+
+        if index_of_blank in cant_move_at: return None
+        swap_index = index_of_blank + offset
+
+
+        # print(old_config)
+        # print("to")
+
+        #preform the swap
+        old_config[index_of_blank] = old_config[swap_index]
+        old_config[swap_index] = 0
+
+        #print(old_config)
+
+        path = str(self.action)
+        path += " " + action
+
+        new_state = PuzzleState(old_config, self.n, self, action, self.cost + 1)
+        return new_state
+
+
     def display(self):
         """ Display this Puzzle state as a n*n board """
         for i in range(self.n):
@@ -48,32 +78,33 @@ class PuzzleState(object):
         Moves the blank tile one row up.
         :return a PuzzleState with the new configuration
         """
-        new_state = PuzzleState(begin_state, board_size)
+        new_state = self.move_helper([0,1,2],-3,'Up')
+        return new_state
 
-
-
-        pass
 
     def move_down(self):
         """
         Moves the blank tile one row down.
         :return a PuzzleState with the new configuration
         """
-        pass
+        new_state = self.move_helper([6,7,8],3,'Down')
+        return new_state
 
     def move_left(self):
         """
         Moves the blank tile one column to the left.
         :return a PuzzleState with the new configuration
         """
-        pass
+        new_state = self.move_helper([0,3,6],-1,'Left')
+        return new_state
 
     def move_right(self):
         """
         Moves the blank tile one column to the right.
         :return a PuzzleState with the new configuration
         """
-        pass
+        new_state = self.move_helper([2,5,8],1,'Right')
+        return new_state
 
     def expand(self):
         """ Generate the child nodes of this node """
@@ -93,22 +124,96 @@ class PuzzleState(object):
         self.children = [state for state in children if state is not None]
         return self.children
 
+
+def getDepth(state):
+    depth = 0
+    while state.action != 'Initial':
+        state = state.parent
+        depth += 1
+    return depth
+
+def getPath(state):
+
+    path = []
+    while state.action != 'Initial':
+        path.insert(0,state.action)
+        state = state.parent
+    return path
+
 # Function that Writes to output.txt
 
 ### Students need to change the method to have the corresponding parameters
-def writeOutput():
+def writeOutput(final_state, nodes_expanded,lastExpored,timeElapsed):
     ### Student Code Goes here
-    pass
+    print(f'path_to_goal: {getPath(final_state)}')
+    print(f'cost_of_path: {final_state.cost}')
+    print(f'nodes_expanded: {nodes_expanded}')
+    print(f'search_depth: {getDepth(final_state)}')
+    print(f'max_search_depth: {getDepth(lastExpored)}')
+    print(f'running_time: {timeElapsed}')
+    print(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}')
 
 def bfs_search(initial_state):
     """BFS search"""
     ### STUDENT CODE GOES HERE ###
-    pass
+
+    start_time  = time.time()
+    frontier = Q.Queue()
+    frontier.put(initial_state)
+
+    in_frontier = set()
+    in_frontier.add(tuple(initial_state.config))
+
+    explored = set()
+    lastExpored = initial_state
+
+    while frontier.empty() == False:
+        state = frontier.get()
+        #in_frontier.discard(tuple(state.config))
+
+        if test_goal(state):
+            writeOutput(state,len(explored), lastExpored,time.time()-start_time)
+            return True
+
+        explored.add(tuple(state.config))
+
+        for child in state.expand():
+            if tuple(child.config) not in explored and tuple(child.config) not in in_frontier:
+                frontier.put(child)
+                in_frontier.add(tuple(child.config))
+                lastExpored = child
+    return False
 
 def dfs_search(initial_state):
-    """DFS search"""
-    ### STUDENT CODE GOES HERE ###
-    pass
+
+    start_time  = time.time()
+    frontier = list()
+    frontier.append(initial_state)
+
+
+    in_frontier = set()
+    in_frontier.add(tuple(initial_state.config))
+
+    explored = set()
+    lastExpored = initial_state
+
+    while len(frontier) != 0:
+        state = frontier.pop()
+        #in_frontier.discard(tuple(state.config))
+
+        if test_goal(state):
+            writeOutput(state,len(explored), lastExpored,time.time()-start_time)
+            return True
+
+        explored.add(tuple(state.config))
+        i = 0
+        for child in state.expand():
+            if tuple(child.config) not in explored and tuple(child.config) not in in_frontier:
+                frontier.insert(len(frontier) - i ,child)
+                i+=1
+                in_frontier.add(tuple(child.config))
+                lastExpored = child
+    return False
 
 def A_star_search(initial_state):
     """A * search"""
@@ -123,12 +228,18 @@ def calculate_total_cost(state):
 def calculate_manhattan_dist(idx, value, n):
     """calculate the manhattan distance of a tile"""
     ### STUDENT CODE GOES HERE ###
-    pass
+    winning_state = [[0,1,2],[3,4,5],[6,7,8]]
+
+    manhattan_distance = abs((value % n) - (index % n )) + abs((value / n) - (index % / ))
+
 
 def test_goal(puzzle_state):
     """test the state is the goal state or not"""
     ### STUDENT CODE GOES HERE ###
-    pass
+    ##TODO make this not hardcoded
+    #print(puzzle_state.config)
+    return puzzle_state.config == [0,1,2,3,4,5,6,7,8]
+
 
 # Main Function that reads in Input and Runs corresponding Algorithm
 def main():
