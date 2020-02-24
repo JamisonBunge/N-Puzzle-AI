@@ -7,8 +7,11 @@ import math
 import time
 import queue as Q
 import resource
+import heapq
 
 #TODO: fix resource amoutn
+
+move_priority =  { 'Up': 0, 'Down':1, 'Left':2,  'Right':3, 'Initial':-1 }
 
 
 #### SKELETON CODE ####
@@ -148,10 +151,10 @@ def writeOutput(final_state, nodes_expanded,lastExpored,timeElapsed):
     print(f'path_to_goal: {getPath(final_state)}')
     print(f'cost_of_path: {final_state.cost}')
     print(f'nodes_expanded: {nodes_expanded}')
-    print(f'search_depth: {getDepth(final_state)}')
-    print(f'max_search_depth: {getDepth(lastExpored)}')
+    print(f'search_depth: { final_state.cost}')
+    print(f'max_search_depth: {lastExpored.cost}')
     print(f'running_time: {timeElapsed}')
-    print(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}')
+    print(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss }')
 
 def bfs_search(initial_state):
     """BFS search"""
@@ -215,22 +218,65 @@ def dfs_search(initial_state):
                 lastExpored = child
     return False
 
+
+def make_node(state):
+    node = [calculate_total_cost(state), move_priority[state.action],time.time(),state]
+
+    return node
+
+
 def A_star_search(initial_state):
     """A * search"""
-    ### STUDENT CODE GOES HERE ###
-    pass
+
+    start_time  = time.time()
+
+    frontier = list()
+    heapq.heapify(frontier)
+    heapq.heappush(frontier,make_node(initial_state))
+
+
+
+    in_frontier = set()
+    in_frontier.add(tuple(initial_state.config))
+
+    explored = set()
+    lastExpored = initial_state
+
+    while len(frontier) != 0:
+
+        state = heapq.heappop(frontier)
+        state_config = state[3].config
+        #in_frontier.discard(tuple(state_config))
+
+        if test_goal(state[3]):
+            writeOutput(state[3],len(explored), lastExpored,time.time()-start_time)
+            return True
+
+        explored.add(tuple(state[3].config))
+
+        for child in state[3].expand():
+            if tuple(child.config) not in explored and tuple(child.config) not in in_frontier:
+                heapq.heappush(frontier,make_node(child))
+                in_frontier.add(tuple(child.config))
+                lastExpored = child
+
+
+    return False
 
 def calculate_total_cost(state):
     """calculate the total estimated cost of a state"""
     ### STUDENT CODE GOES HERE ###
-    pass
+    cost_from_root = state.cost
+    manhattan_cost = 0
+    for x in range(len(state.config)):
+        manhattan_cost += calculate_manhattan_dist(x,state.config[x],state.n)
+    return manhattan_cost + cost_from_root
+
 
 def calculate_manhattan_dist(idx, value, n):
     """calculate the manhattan distance of a tile"""
     ### STUDENT CODE GOES HERE ###
-    winning_state = [[0,1,2],[3,4,5],[6,7,8]]
-
-    manhattan_distance = abs((value % n) - (index % n )) + abs((value / n) - (index % / ))
+    return abs((value % n) - (idx % n )) + abs((value // n) - (idx // n ))
 
 
 def test_goal(puzzle_state):
