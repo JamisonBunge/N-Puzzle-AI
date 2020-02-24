@@ -148,13 +148,26 @@ def getPath(state):
 ### Students need to change the method to have the corresponding parameters
 def writeOutput(final_state, nodes_expanded,lastExpored,timeElapsed):
     ### Student Code Goes here
-    print(f'path_to_goal: {getPath(final_state)}')
-    print(f'cost_of_path: {final_state.cost}')
-    print(f'nodes_expanded: {nodes_expanded}')
-    print(f'search_depth: { final_state.cost}')
-    print(f'max_search_depth: {lastExpored.cost}')
-    print(f'running_time: {timeElapsed}')
-    print(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss }')
+
+    f= open("output.txt","w+")
+
+    f.write(f'path_to_goal: {getPath(final_state)}\n')
+    f.write(f'cost_of_path: {final_state.cost}\n')
+    f.write(f'nodes_expanded: {nodes_expanded}\n')
+    f.write(f'search_depth: { final_state.cost}\n')
+    f.write(f'max_search_depth: {lastExpored.cost}\n')
+    f.write('running_time: %.8f\n' %(timeElapsed))
+    f.write(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss }\n')
+    f.close()
+
+    #print(f'path_to_goal: {getPath(final_state)}')
+    # print(f'cost_of_path: {final_state.cost}')
+    # print(f'nodes_expanded: {nodes_expanded}')
+    # print(f'search_depth: { final_state.cost}')
+    # print(f'max_search_depth: {lastExpored.cost}')
+    # print('running_time: %.8f' %(timeElapsed))
+    # print(f'max_ram_usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss }')
+
 
 def bfs_search(initial_state):
     """BFS search"""
@@ -282,9 +295,14 @@ def calculate_manhattan_dist(idx, value, n):
 def test_goal(puzzle_state):
     """test the state is the goal state or not"""
     ### STUDENT CODE GOES HERE ###
-    ##TODO make this not hardcoded
+
+    for i in range(puzzle_state.n ** 2):
+        if i != puzzle_state.config[i]:
+            return False
+    return True
+
     #print(puzzle_state.config)
-    return puzzle_state.config == [0,1,2,3,4,5,6,7,8]
+    #return puzzle_state.config == goal_config
 
 
 # Main Function that reads in Input and Runs corresponding Algorithm
